@@ -33,5 +33,5 @@ def plot_grayscale_histogram(image: np.ndarray):
     plt.show()
 
 
-image = np.load(r"C:\Users\Sarah\OneDrive\Documents\8.Semester\Projekt\experiments\data\Single-channel\Train_part1\Train\e13991s3_P01536.7.npy")
+image = np.load(r"data\Single-channel\Train_part1\Train\e13991s3_P01536.7.npy")
 plot_grayscale_histogram(image)
