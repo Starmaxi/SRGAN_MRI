@@ -13,13 +13,10 @@ def create_brain_mask(image):
     else:
         gray = image.copy()
 
-    # Apply Gaussian blur to reduce noise
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
-    # Apply Otsu's thresholding
     _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-    # Find contours
     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     # Create empty mask
@@ -44,7 +41,6 @@ def process_image(input_path, output_path):
     """
     Process a single image by applying the brain mask.
     """
-    # Read image
     image = cv2.imread(input_path)
 
     if image is None:
@@ -62,17 +58,13 @@ def process_image(input_path, output_path):
 
 
 def main():
-    # Input directory containing the original images
     input_dir = "out"
-    # Output directory for masked images
     output_dir = "masked_out"
 
-    # Create output directory structure
     subdirs = ["sagittal", "axial", "coronal", "joint_data"]
     for subdir in subdirs:
         os.makedirs(os.path.join(output_dir, subdir), exist_ok=True)
 
-    # Process all images in each subdirectory
     for subdir in subdirs:
         input_subdir = os.path.join(input_dir, subdir)
         output_subdir = os.path.join(output_dir, subdir)
@@ -81,7 +73,6 @@ def main():
             print(f"Directory not found: {input_subdir}")
             continue
 
-        # Get all JPEG files
         jpeg_files = [f for f in os.listdir(input_subdir) if f.lower().endswith('.jpg')]
 
         print(f"Processing images in {subdir}...")
