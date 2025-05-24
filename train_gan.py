@@ -11,7 +11,7 @@ import itertools
 import sys
 from tqdm import tqdm
 
-from torch.profiler import profile, ProfilerActivity, tensorboard_trace_handler
+#from torch.profiler import profile, ProfilerActivity, tensorboard_trace_handler
 
 import torchvision.transforms as transforms
 from torchvision.utils import save_image, make_grid
@@ -29,13 +29,15 @@ from torch.cuda.amp import autocast, GradScaler  # Mixed Precision
 
 os.makedirs("images", exist_ok=True)
 os.makedirs("saved_models", exist_ok=True)
+os.makedirs("loss", exist_ok=True)
+
 
 # Argumente
 parser = argparse.ArgumentParser()
 parser.add_argument("--epoch", type=int, default=0, help="epoch to start training from")
 parser.add_argument("--n_epochs", type=int, default=200, help="number of epochs of training")
 parser.add_argument("--dataset_name", type=str, default="img_align_celeba", help="name of the dataset")
-parser.add_argument("--batch_size", type=int, default=30, help="size of the batches")
+parser.add_argument("--batch_size", type=int, default=6, help="size of the batches")
 parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
 parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
 parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
@@ -53,8 +55,10 @@ cuda = torch.cuda.is_available()
 hr_shape = (opt.hr_height, opt.hr_width)
 
 # Initialize models
-generator = GeneratorDensNet(in_channels=1, out_channels=1)
+#generator = GeneratorDensNet(in_channels=1, out_channels=1)
 #generator = GeneratorResNet(in_channels=1, out_channels=1)
+generator = GeneratorVGG(in_channels=1, out_channels=1)
+#generator = GeneratorResDenseNet(in_channels=1, out_channels=1)
 discriminator = Discriminator(input_shape=(opt.channels, *hr_shape))
 feature_extractor = FeatureExtractor().eval()  # Inference mode
 
@@ -73,6 +77,11 @@ if cuda:
     criterion_GAN.cuda()
     criterion_content.cuda()
 
+if opt.epoch != 0:
+    # Load pretrained models
+    generator.load_state_dict(torch.load("saved_models/generator_%d.pth" % (int(opt.epoch)-1)))
+    discriminator.load_state_dict(torch.load("saved_models/discriminator_%d.pth" % (int(opt.epoch)-1)))
+
 # Optimizers
 optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
 optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
@@ -81,23 +90,45 @@ optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt
 scaler = GradScaler(enabled=cuda)  # Nur aktivieren, wenn CUDA verfügbar ist
 Tensor = torch.cuda.FloatTensor if cuda else torch.Tensor
 
+# set dataloader seed
+seed = 42
+torch.manual_seed(seed)
+np.random.seed(seed)
+
 # DataLoader
+"""
 dataloader = DataLoader(
-    ImageDataset("/mnt/1tb_ssd/Dokumente/Schule/THI/projekt_2/out/joint_data/", hr_shape=hr_shape),
+    ImageDataset("/mnt/1tb_ssd/Dokumente/Schule/THI/projekt_2/image_data/out_coronal/coronal/", hr_shape=hr_shape),
     batch_size=opt.batch_size,
     shuffle=True,
     num_workers=opt.n_cpu,
-    pin_memory=True
+    pin_memory=True,
+    prefetch_factor=10
 )
-
+"""
+dataloader = DataLoader(
+    #ImageDataset("/mnt/1tb_ssd/Dokumente/Schule/THI/projekt_2/out_coronal/coronal/", hr_shape=hr_shape),
+    TensorBBDataset("/mnt/1tb_ssd/Dokumente/Schule/THI/projekt_2/tensor_data/all_views_bb_brain_only/", hr_height = 256),
+    batch_size=opt.batch_size,
+    shuffle=True,
+    num_workers=opt.n_cpu,
+    pin_memory=True,
+    collate_fn=collate_fn
+)
 
 # Training
 for epoch in tqdm(range(opt.epoch, opt.n_epochs)):
+    loss_file = open("loss/loss_file_"+ str(epoch) +".txt", "w")
+
     for i, imgs in tqdm(enumerate(dataloader)):
+        #print("return")
         imgs_lr = Variable(imgs["lr"].type(Tensor)).cuda(non_blocking=True)
         imgs_hr = Variable(imgs["hr"].type(Tensor)).cuda(non_blocking=True)
-        valid = Variable(Tensor(np.ones((imgs_lr.size(0), *discriminator.output_shape))), requires_grad=False)
-        fake = Variable(Tensor(np.zeros((imgs_lr.size(0), *discriminator.output_shape))), requires_grad=False)
+        #valid = Variable(Tensor(np.ones((imgs_lr.size(0), *discriminator.output_shape))), requires_grad=False)
+        #fake = Variable(Tensor(np.zeros((imgs_lr.size(0), *discriminator.output_shape))), requires_grad=False)
+        discriminator_output_shape = (discriminator.calc_output_shape(imgs_hr.shape[1:]))
+        valid = Variable(Tensor(np.ones((imgs_lr.size(0), *discriminator_output_shape))), requires_grad=False)
+        fake = Variable(Tensor(np.zeros((imgs_lr.size(0), *discriminator_output_shape))), requires_grad=False)
 
         # ------------------
         #  Train Generator (mit Mixed Precision)
@@ -105,9 +136,26 @@ for epoch in tqdm(range(opt.epoch, opt.n_epochs)):
         optimizer_G.zero_grad()
 
         with autocast(enabled=cuda):  # Automatische Typumwandlung zu float16
-            gen_hr = generator(imgs_lr[:, 0:1, :, :])
+            #gen_hr = generator(imgs_lr[:, 0:1, :, :])
+            gen_hr = generator(imgs_lr)
+            #print("gen_hr: ", gen_hr.size())
+            #print("valid: ", valid.size())
+            #print(gen_hr.size(2), gen_hr.size(3))
+            #print(valid[:,:,:gen_hr.size(2), :gen_hr.size(3)].size())
+            #print("dis out shape: ", discriminator(gen_hr).size())
+            #print("calc dis out shape: ", discriminator_output_shape)
+            #print("gen hr shape: ", gen_hr.shape)
+            #print("hr shape: ", imgs_hr.shape)
             loss_GAN = criterion_GAN(discriminator(gen_hr), valid)
 
+            # Content loss (Feature Extractor benötigt float32)
+            gen_features = feature_extractor(gen_hr.expand(-1, 3, -1, -1))
+            real_features = feature_extractor(imgs_hr.expand(-1, 3, -1, -1))
+            #print(gen_features.size())
+            #print(real_features.size())
+            loss_content = criterion_content(gen_features, real_features.detach())
+
+            loss_G = loss_content + 1e-3 * loss_GAN
             # Content loss (Feature Extractor benötigt float32)
             gen_features = feature_extractor(gen_hr.expand(-1, 3, -1, -1))
             real_features = feature_extractor(imgs_hr.expand(-1, 3, -1, -1))
@@ -119,6 +167,9 @@ for epoch in tqdm(range(opt.epoch, opt.n_epochs)):
         scaler.scale(loss_G).backward()
         scaler.step(optimizer_G)
         scaler.update()
+        
+        #loss_G.backward()
+        #optimizer_G.step()
 
         # ---------------------
         #  Train Discriminator (mit Mixed Precision)
@@ -134,12 +185,24 @@ for epoch in tqdm(range(opt.epoch, opt.n_epochs)):
         scaler.step(optimizer_D)
         scaler.update()
 
+        #loss_D.backward()
+        #optimizer_D.step()
+
+        #sys.stdout.write(
+        #    "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]"
+        #    % (epoch, opt.n_epochs, i, len(dataloader), loss_D.item(), loss_G.item())
+        #)
+
+        loss_file.write('{"Epoch": %d/%d, "Batch": %d/%d, "D loss": %f, "G loss": %f}\n' %(epoch, opt.n_epochs, i, len(dataloader), loss_D.item(), loss_G.item()))
+
         # Logging
         batches_done = epoch * len(dataloader) + i
         if batches_done % opt.sample_interval == 0:
-            imgs_lr = nn.functional.interpolate(imgs_lr, scale_factor=4)
+            #imgs_lr = nn.functional.interpolate(imgs_lr, scale_factor=4)
+            #imgs_lr = imgs_hr
             gen_hr = make_grid(gen_hr, nrow=1, normalize=True)
-            imgs_lr = make_grid(imgs_lr, nrow=1, normalize=True)
+            #imgs_lr = make_grid(imgs_lr, nrow=1, normalize=True)
+            imgs_lr = make_grid(imgs_hr, nrow=1, normalize=True)
             img_grid = torch.cat((imgs_lr, gen_hr), -1)
             save_image(img_grid, "images/%d.png" % batches_done, normalize=False)
 
@@ -147,3 +210,6 @@ for epoch in tqdm(range(opt.epoch, opt.n_epochs)):
     if opt.checkpoint_interval != -1 and epoch % opt.checkpoint_interval == 0:
         torch.save(generator.state_dict(), "saved_models/generator_%d.pth" % epoch)
         torch.save(discriminator.state_dict(), "saved_models/discriminator_%d.pth" % epoch)
+
+    loss_file.close()
+
