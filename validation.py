@@ -135,3 +135,37 @@ def plot_every_vol_as_histogram(dateien):
 ordner = r"C:\Users\Sarah\OneDrive\Documents\8.Semester\Projekt\experiments\data\Single-channel\Train_part1\Train"
 dateien = sorted(os.listdir(ordner))
 # plot_every_vol_as_histogram(dateien)
+
+
+
+
+# Beispiel: Zwei Bilder als .npy laden
+img1_np = np.load(r"C:\Users\Sarah\OneDrive\Documents\8.Semester\Projekt\experiments\data\Single-channel\Train_part1\Train\e13991s3_P01536.7.npy")  # dein erstes Bild
+img2_np = np.load(r"C:\Users\Sarah\OneDrive\Documents\8.Semester\Projekt\experiments\data\Single-channel\Train_part1\Train\e14078s3_P02048.7.npy")       # dein zweites Bild (hier musst du dein 2. File angeben!)
+
+# Sicherstellen, dass sie float-Werte haben
+img1_np = img1_np.astype(np.float32)
+img2_np = img2_np.astype(np.float32)
+
+# Falls sie unterschiedliche Größen haben → zuschneiden oder resizen
+# Hier: Zuschneiden auf die kleinste gemeinsame Größe
+min_height = min(img1_np.shape[0], img2_np.shape[0])
+min_width  = min(img1_np.shape[1], img2_np.shape[1])
+
+img1_np = img1_np[:min_height, :min_width]
+img2_np = img2_np[:min_height, :min_width]
+
+# NCC Funktion
+def normalized_cross_correlation(img1, img2):
+    mean1 = np.mean(img1)
+    mean2 = np.mean(img2)
+    
+    numerator = np.sum((img1 - mean1) * (img2 - mean2))
+    denominator = np.sqrt(np.sum((img1 - mean1)**2) * np.sum((img2 - mean2)**2))
+    
+    ncc_value = numerator / denominator
+    return ncc_value
+
+# Berechnen und ausgeben
+ncc_result = normalized_cross_correlation(img1_np, img2_np)
+print(f"NCC: {ncc_result:.4f}")
