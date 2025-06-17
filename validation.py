@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from skimage.metrics import structural_similarity as ssim
+from PIL import Image
 
 def calculate_psnr(original: np.ndarray, compared: np.ndarray, max_pixel_value: float = 255.0) -> float:
     """
@@ -114,10 +115,10 @@ image_vol_2 = np.load(r"C:\Users\Sarah\OneDrive\Documents\8.Semester\Projekt\exp
 image_vol_ffttransformed = get_image_volume_fft2(image_vol)                                 # Bilddaten im k-space / FFT Raum
 image_vol_2_ffttransformed = get_image_volume_fft2(image_vol_2)                             # Bilddaten im k-space / FFT Raum
 
-print("PSNR:", calculate_psnr(image_vol, image_vol_2, max_pixel_value=np.max(image_vol)))
-show_slices_side_by_side(image_vol_ffttransformed, image_vol_2_ffttransformed, slice_idx=80)
+# print("PSNR:", calculate_psnr(image_vol, image_vol_2, max_pixel_value=np.max(image_vol)))
+# show_slices_side_by_side(image_vol_ffttransformed, image_vol_2_ffttransformed, slice_idx=80)
 
-print("SSIM:", calculate_ssim(image_vol, image_vol_2))
+# print("SSIM:", calculate_ssim(image_vol, image_vol_2))
 
 
 def plot_every_vol_as_histogram(dateien):
@@ -138,10 +139,9 @@ dateien = sorted(os.listdir(ordner))
 
 
 
-
 # Beispiel: Zwei Bilder als .npy laden
-img1_np = np.load(r"C:\Users\Sarah\OneDrive\Documents\8.Semester\Projekt\experiments\data\Single-channel\Train_part1\Train\e13991s3_P01536.7.npy")  # dein erstes Bild
-img2_np = np.load(r"C:\Users\Sarah\OneDrive\Documents\8.Semester\Projekt\experiments\data\Single-channel\Train_part1\Train\e14078s3_P02048.7.npy")       # dein zweites Bild (hier musst du dein 2. File angeben!)
+img1_np = np.load(r"C:\Users\Sarah\OneDrive\Documents\8.Semester\Projekt\experiments\data\Single-channel\Train_part1\Train\e13991s3_P01536.7.npy") 
+img2_np = np.load(r"C:\Users\Sarah\OneDrive\Documents\8.Semester\Projekt\experiments\data\Single-channel\Train_part1\Train\e14078s3_P02048.7.npy") 
 
 # Sicherstellen, dass sie float-Werte haben
 img1_np = img1_np.astype(np.float32)
@@ -167,5 +167,209 @@ def normalized_cross_correlation(img1, img2):
     return ncc_value
 
 # Berechnen und ausgeben
-ncc_result = normalized_cross_correlation(img1_np, img2_np)
-print(f"NCC: {ncc_result:.4f}")
+#ncc_result = normalized_cross_correlation(img1_np, img2_np)
+#print(f"NCC: {ncc_result:.4f}")
+
+
+
+######### PSNR ###############################################
+# Pfade zu den Verzeichnissen
+original_dir = r"C:\Users\Sarah\OneDrive\Documents\Maschinelles Lernen\ML2\Aufgabenblatt 3\archiv(1).tar\orig_srgan_val.tar\val_ground_truth\sagittal"
+compared_dir = r"C:\Users\Sarah\OneDrive\Documents\Maschinelles Lernen\ML2\Aufgabenblatt 3\archiv(1).tar\orig_srgan_val.tar\val_processed\sagittal"
+
+# Anzahl der Bilder
+num_images = 1292  # von 0 bis 27111 -> 27112 Bilder
+
+# Schleife über alle Bilder
+# psnr_values = []
+
+# for i in range(num_images):
+    
+#     filename = f"{i}.png"
+    
+#     # Volle Pfade zusammensetzen
+#     original_path = os.path.join(original_dir, filename)
+#     compared_path = os.path.join(compared_dir, filename)
+    
+#     # Bilder laden
+#     original = np.array(Image.open(original_path)).astype(np.float32)
+#     compared = np.array(Image.open(compared_path)).astype(np.float32)
+    
+#     # PSNR berechnen
+#     psnr = calculate_psnr(original, compared)
+#     psnr_values.append(psnr)
+    
+#     # Optional: Fortschritt ausgeben
+#     # if i % 1000 == 0:
+#     #     print(f"Bild {i}/{num_images-1}: PSNR = {psnr:.2f} dB")
+
+# # Optional: Durchschnittliches PSNR ausgeben
+# average_psnr = np.mean(psnr_values)
+# print(f"\nDurchschnittliches PSNR über alle axial-Bilder: {average_psnr:.2f} dB")
+
+
+
+########### SSIM ####################################################################
+# Pfade zu den Verzeichnissen
+# original_dir = r"C:\Users\Sarah\OneDrive\Documents\Maschinelles Lernen\ML2\Aufgabenblatt 3\archiv(1).tar\val_data_partly_trained.tar\ground_truth\sagittal"
+# compared_dir = r"C:\Users\Sarah\OneDrive\Documents\Maschinelles Lernen\ML2\Aufgabenblatt 3\archiv(1).tar\val_data_partly_trained.tar\processed\sagittal"
+
+# Anzahl der Bilder
+# num_images = 1292  # von 0 bis 27111 -> 27112 Bilder
+
+# # # Schleife über alle Bilder
+# ssim_values = []
+
+# for i in range(num_images):
+#     filename = f"{i}.png"
+    
+#     # Volle Pfade zusammensetzen
+#     original_path = os.path.join(original_dir, filename)
+#     compared_path = os.path.join(compared_dir, filename)
+    
+#     # Bilder laden
+#     original = np.array(Image.open(original_path)).astype(np.float32)
+#     compared = np.array(Image.open(compared_path)).astype(np.float32)
+    
+#     # Falls Bilder farbig sind, in Graustufen umwandeln
+#     if original.ndim == 3:
+#         original = np.mean(original, axis=2)
+#     if compared.ndim == 3:
+#         compared = np.mean(compared, axis=2)
+    
+#     # SSIM berechnen
+#     ssim_score = ssim(original, compared, data_range=original.max() - original.min())
+#     ssim_values.append(ssim_score)
+    
+#     # # Optional: Fortschritt ausgeben
+#     # if i % 1000 == 0:
+#     #     print(f"Bild {i}/{num_images-1}: SSIM = {ssim_score:.4f}")
+
+# # Optional: Durchschnittliches SSIM ausgeben
+# average_ssim = np.mean(ssim_values)
+# print(f"\nDurchschnittliches SSIM über alle sagittal Bilder: {average_ssim:.4f}")
+
+
+############ NCC ################################################
+# Liste zum Speichern der NCC-Werte
+# ncc_values = []
+
+# for i in range(num_images):
+#     filename = f"{i}.png"
+    
+#     original_path = os.path.join(original_dir, filename)
+#     compared_path = os.path.join(compared_dir, filename)
+    
+#     # Bilder laden und in float32 umwandeln
+#     original = np.array(Image.open(original_path)).astype(np.float32)
+#     compared = np.array(Image.open(compared_path)).astype(np.float32)
+    
+#     # In Graustufen umwandeln, falls Bild RGB ist
+#     if original.ndim == 3:
+#         original = np.mean(original, axis=2)
+#     if compared.ndim == 3:
+#         compared = np.mean(compared, axis=2)
+
+#     # NCC berechnen
+#     ncc = normalized_cross_correlation(original, compared)
+#     ncc_values.append(ncc)
+
+    # Optional: Fortschritt anzeigen
+    # if i % 1000 == 0:
+    #     print(f"Bild {i}/{num_images-1}: NCC = {ncc:.4f}")
+
+# Durchschnittlichen NCC ausgeben
+# average_ncc = np.mean(ncc_values)
+# print(f"\nDurchschnittlicher NCC über alle sagittal-Bilder: {average_ncc:.4f}")
+
+
+
+############# Histograms ###################################################
+def plot_image_histograms(image_path1, image_path2, title1="Image 1", title2="Image 2"):
+    """
+    Loads two images and plots their grayscale histograms side by side.
+
+    Parameters:
+    - image_path1: str, path to the first image
+    - image_path2: str, path to the second image
+    - title1: str, optional, title for the first image histogram
+    - title2: str, optional, title for the second image histogram
+    """
+
+    # Load and convert images to grayscale
+    img1 = Image.open(image_path1).convert("L")
+    img2 = Image.open(image_path2).convert("L")
+
+    # Convert to numpy arrays
+    img1_array = np.array(img1)
+    img2_array = np.array(img2)
+
+    # Plot histograms
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+    axes[0].hist(img1_array.flatten(), bins=256, range=(0, 255), color='gray')
+    axes[0].set_title(f"{title1} Histogram")
+    axes[0].set_xlabel("Pixel Intensity")
+    axes[0].set_ylabel("Frequency")
+
+    axes[1].hist(img2_array.flatten(), bins=256, range=(0, 255), color='gray')
+    axes[1].set_title(f"{title2} Histogram")
+    axes[1].set_xlabel("Pixel Intensity")
+    axes[1].set_ylabel("Frequency")
+
+    plt.tight_layout()
+    plt.show()
+
+# plot_image_histograms(r"C:\Users\Sarah\OneDrive\Documents\Maschinelles Lernen\ML2\Aufgabenblatt 3\archiv(1).tar\val_data_partly_trained.tar\ground_truth\axial\0.png", r"C:\Users\Sarah\OneDrive\Documents\Maschinelles Lernen\ML2\Aufgabenblatt 3\archiv(1).tar\val_data_partly_trained.tar\processed\axial\0.png", "Ground Truth", "Upscaled")
+
+
+# lr_img = Image.open(r"C:\Users\Sarah\OneDrive\Documents\Maschinelles Lernen\ML2\Aufgabenblatt 3\archiv(1).tar\val_data_partly_trained.tar\processed\axial\0.png").convert("L")
+# hr_img = Image.open(r"C:\Users\Sarah\OneDrive\Documents\Maschinelles Lernen\ML2\Aufgabenblatt 3\archiv(1).tar\val_data_partly_trained.tar\ground_truth\axial\0.png").convert("L")
+
+# target_size = (256,256)
+# lr_img_resized = lr_img.resize(target_size, Image.Resampling.LANCZOS)  # LANCZOS für bessere Qualität
+# hr_img_resized = hr_img.resize(target_size, Image.Resampling.LANCZOS)
+
+# # Bilder als NumPy-Arrays konvertieren
+# lr_np = np.array(lr_img_resized)  # Array-Form: (H, W)
+# hr_np = np.array(hr_img_resized)  # Array-Form: (H, W)
+
+# error_map = np.abs(hr_np - lr_np)
+
+# def plot_histogram(image, title):
+#     # Bild in Grauwert umwandeln
+#     grayscale_img = image.convert("L")
+#     img_array = np.array(grayscale_img).flatten()  # Bild in 1D Array umwandeln
+#     plt.hist(img_array, bins=256, color='gray', alpha=0.7)
+#     plt.title(title)
+#     plt.xlabel('Pixel Wert')
+#     plt.ylabel('Häufigkeit')
+
+# plt.figure(figsize=(18, 12))
+
+# plt.subplot(2, 3, 1)
+# plt.imshow(lr_img, cmap='gray')
+# plt.title("Low Resolution")
+
+# plt.subplot(2, 3, 2)
+# plt.imshow(hr_img, cmap='gray')
+# plt.title("High Resolution")
+
+# plt.subplot(2, 3, 3)
+# plt.imshow(error_map, cmap='hot')
+# plt.title("Error Map (Abs. Fehler)")
+
+# # plt.subplot(2, 3, 4)
+# # plot_histogram(lr_img, "Low Resolution Histogram")
+
+# # plt.subplot(2, 3, 5)
+# # plot_histogram(hr_img, "High Resolution Histogram")
+
+# # plt.subplot(2, 3, 6)
+# # plt.hist(error_map.flatten(), bins=50, color='red', alpha=0.7)
+# # plt.title("Error Map Histogram")
+# # plt.xlabel('Fehler Wert')
+# # plt.ylabel('Häufigkeit')
+
+# plt.tight_layout()
+# plt.show()
