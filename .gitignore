@@ -1,1 +1,4 @@
 *.png
+sortHrImages.py
+*.npy
+3dinferenz.ipynb
