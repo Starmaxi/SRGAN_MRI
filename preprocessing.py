@@ -110,7 +110,7 @@ if __name__ == "__main__":
     )
 
     model = CoordRegressionNet()
-    model.load_state_dict(torch.load("model_4_outputs.pth.best"))
+    model.load_state_dict(torch.load("model_outputs.pth"))
     model.eval()
 
     normalize = transforms.Normalize(mean=[0.5], std=[0.5])
