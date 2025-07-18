@@ -1,29 +1,7 @@
-# 🧠 MRI Super-Resolution via SR-GAN
+# Script Overview
 
-Dieses Projekt enthält Skripte zur Verarbeitung und Fusion von MRT-Bildern mit Super-Resolution und Unsicherheitsbewertung.
+| Script Name        | Input                                                                                     | Output                                    | Function                                                                                      |
+|--------------------|-------------------------------------------------------------------------------------------|-------------------------------------------|-----------------------------------------------------------------------------------------------|
+| `compute_mean.py`  | 3 main directories each containing a "volumes" subfolder with 10 brain volumes (`gehirn1.npy` to `gehirn10.npy`) | 1 target directory with 10 mean volumes (`gehirn1.npy` to `gehirn10.npy`) | Computes the voxel-wise mean of volumes from sagittal, coronal, and axial views for each brain |
+| `fuseuncertainty.py` | Directory containing sets of 3 super-resolved volumes (`*_sr.npy`) and their uncertainty maps (`*_uncertainty.npy`) per brain | Fused volume with lowest uncertainty per voxel saved in a `fusion_output` subfolder | Performs voxel-wise fusion selecting the voxel value with lowest uncertainty among three views |
 
-## 📜 Skripte
-
-1. `fuseuncertainty.py` – Unsicherheitsbasierte voxelweise Fusion  
-2. *(weitere Skripte folgen, z. B. `preprocess.py`, `evaluate.py`, `visualize.py`)*
-
----
-
-## 🔧 `fuseuncertainty.py`
-
-### Zweck  
-Führt eine voxelweise Fusion von drei rekonstruierten MRT-Volumes (z. B. axial, koronal, sagittal) durch und wählt pro Voxel den Wert mit der geringsten Unsicherheit.
-
-### Eingabe  
-Ordner mit Dateien wie:
-
-- `001_sr0.npy`, `001_sr1.npy`, `001_sr2.npy`  
-- `001_uncertainty0.npy`, `001_uncertainty1.npy`, `001_uncertainty2.npy`
-
-### Ausgabe  
-- `001_fused.npy` im Ordner `fusion_output/`
-
-### Nutzung
-
-```bash
-python fuseuncertainty.py
