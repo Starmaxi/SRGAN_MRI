@@ -9,8 +9,7 @@
 | `test3drichtig.ipynb` | Multiple `.npy` volume files such as `"gehirn3axial.npy"`, `"gehirn3coronal.npy"`, `"gehirn3sagumsortiert.npy"`       | Visualizations of slices in axial, coronal, sagittal orientations; transposed and saved `.npy` files | Interactive notebook with multiple cells for visualizing 3D MRI volumes, slicing views, volume shape checks, and transposition of volume axes for correct orientation |
 | `compute_uncertainty.py` (incomplete) | Folder with 2D grayscale images (PNG) to be super-resolved by a generator model with Monte Carlo dropout  | Super-resolved images and uncertainty maps saved as PNG in output directory   | Calculates super-resolution images with uncertainty maps using Monte Carlo Dropout; **Script incomplete: missing generator model and function call** |
 | `test_inferenz.ipynb` | Two grayscale images (`lr_test.png` and `hr_test.png`) resized to 256×256 pixels             | PSNR and SSIM values printed; visual plots of LR, HR, error maps, and histograms | Notebook to compare low-resolution and high-resolution images quantitatively and visually using PSNR, SSIM, error maps, and pixel value histograms |
-
-
+|`create_train_data.py`|Directory with subdirectories "Train_part1", "Train_part2" and "Train_part3"| Augmented traindata sorted by axes|Converts .npy k-space volumes to image volumes and splits image volumes into individual images. Images are augmented and saved as PNG files.|
 ## Validation script:
 ## Requirements
 
